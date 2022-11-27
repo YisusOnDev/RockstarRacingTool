@@ -1,0 +1,415 @@
+import CircularProgress from "@mui/material/CircularProgress";
+import { message, open, save } from '@tauri-apps/api/dialog';
+import { readTextFile, writeFile } from "@tauri-apps/api/fs";
+import { useState } from "react";
+import ConvertJson, { Race } from "./utils/ConvertJson";
+
+function App() {
+  const [spinner, setSpinner] = useState(false);
+
+  async function loadJsonFile() {
+    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+    //setGreetMsg(await invoke("greet", { name }));
+    const filePath: string | string[] | null = await open({
+      multiple: false,
+      filters: [{
+        name: 'JSON',
+        extensions: ['json']
+      }]
+    })
+
+    if (filePath === null) return;
+
+    setSpinner(true);
+
+    const fileContent: string | void = await readTextFile(filePath as string);
+    const jsonFile: JSON | any = JSON.parse(fileContent);
+    const savePath = await save({
+      filters: [{
+        name: 'JSON',
+        extensions: ['json']
+      }]
+    });
+
+    if (savePath === null) {
+      message('No has puesto el nombre del fichero convertido');
+      return;
+    }
+
+    const converted: Race | undefined = ConvertJson(jsonFile);
+    const savedFile: any = writeFile(savePath as string, JSON.stringify(converted));
+    setSpinner(false);
+    message('Conversión completada!')
+  }
+
+  return (
+    <div className="container">
+      <h1>Oasis Rockstar Racing Tool</h1>
+
+      <div className="row">
+        Selecciona un archivo JSON de Rockstar para convertirlo
+      </div>
+
+      <div className="row">
+        <div>
+          <CircularProgress style={{ display: spinner ? 'block' : 'none' }} />
+          <button style={{ display: !spinner ? 'block' : 'none' }} type="button" onClick={() => loadJsonFile()}>
+            Convertir JSON
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
+
+
+
+private void SearchURL()
+    {
+      ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+      if (this.TextConvertURL.Text.Contains("https://prod.cloud.rockstargames.com/ugc/gta5mission/") || this.TextConvertURL.Text.Contains("http://prod.cloud.rockstargames.com/ugc/gta5mission/"))
+      {
+        WebClient webClient = new WebClient();
+        string changeURL = this.TextConvertURL.Text;
+        if (this.TextConvertURL.Text.Contains(".json"))
+        {
+          string[] strArray = changeURL.Split('/');
+          string[] array2 = JobEditor.JobEditor.GetBetween(strArray[strArray.Length - 1], "", ".json").Split('_');
+          try
+          {
+            this.NumericConvertURLMin1.Invoke((Delegate) (() => this.NumericConvertURLMin1.Value = Convert.ToDecimal(array2[0])));
+            this.NumericConvertURLMin2.Invoke((Delegate) (() => this.NumericConvertURLMin2.Value = Convert.ToDecimal(array2[0])));
+          }
+          catch
+          {
+            this.NumericConvertURLMin1.Invoke((Delegate) (() => this.NumericConvertURLMin1.Value = 0M));
+            this.NumericConvertURLMin2.Invoke((Delegate) (() => this.NumericConvertURLMin2.Value = 0M));
+          }
+          try
+          {
+            this.NumericConvertURLMax1.Invoke((Delegate) (() => this.NumericConvertURLMax1.Value = Convert.ToDecimal(array2[1])));
+            this.NumericConvertURLMax2.Invoke((Delegate) (() => this.NumericConvertURLMax2.Value = Convert.ToDecimal(array2[1])));
+          }
+          catch
+          {
+            this.NumericConvertURLMax1.Invoke((Delegate) (() => this.NumericConvertURLMax1.Value = 10M));
+            this.NumericConvertURLMax2.Invoke((Delegate) (() => this.NumericConvertURLMax2.Value = 10M));
+          }
+          this.ListConvertURLLanguage.Invoke((Delegate) (() => this.ListConvertURLLanguage.SelectedItem = (object) array2[2]));
+        }
+        this.firstNumber = (int) this.NumericConvertURLMin1.Value;
+        this.secondNumber = (int) this.NumericConvertURLMin2.Value;
+        this.ListConvertURLLanguage.Invoke((Delegate) (() => this.country = (string) this.ListConvertURLLanguage.SelectedItem));
+        this.GroupStatus.Invoke((Delegate) (() =>
+        {
+          if (this.country == "en")
+            this.GroupStatus.Text = "Searching for english";
+          else if (this.country == "fr")
+            this.GroupStatus.Text = "Searching for french";
+          else if (this.country == "es")
+            this.GroupStatus.Text = "Searching for spanish";
+          else if (this.country == "de")
+            this.GroupStatus.Text = "Searching for german";
+          else if (this.country == "it")
+            this.GroupStatus.Text = "Searching for italian";
+          else if (this.country == "ru")
+            this.GroupStatus.Text = "Searching for russian";
+          else if (this.country == "pt")
+            this.GroupStatus.Text = "Searching for portuguese";
+          else if (this.country == "cn")
+            this.GroupStatus.Text = "Searching for chinese";
+          else if (this.country == "jp")
+            this.GroupStatus.Text = "Searching for japanese";
+          else if (this.country == "kr")
+            this.GroupStatus.Text = "Searching for korean";
+          else if (this.country == "mx")
+            this.GroupStatus.Text = "Searching for mexican";
+          else if (this.country == "pl")
+            this.GroupStatus.Text = "Searching for polish";
+          this.GroupStatus.Refresh();
+        }));
+        while (true)
+        {
+          string str1 = changeURL.Substring(0, changeURL.LastIndexOf('/') + 1);
+          try
+          {
+            this.TextConvertURLDisable();
+            using (StreamWriter streamWriter = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "Temp.json"))
+            {
+              if (this.TextConvertURL.Text.Contains(".jpg"))
+                changeURL = str1 + (object) this.firstNumber + "_" + (object) this.secondNumber + "_" + this.country + ".json";
+              string str2 = webClient.DownloadString(changeURL).Replace("}}}", "###").Replace("\t", "").Replace("\r\n", ".").Replace("\r", "");
+              char[] chArray = new char[1]{ ',' };
+              foreach (string str3 in str2.Split(chArray))
+                streamWriter.WriteLine(str3.Replace("{", "\r\n{\r\n").Replace("}", "\r\n}\r\n").Replace("[", "\r\n[\r\n").Replace("]", "\r\n]\r\n") + ",");
+              this.TextConvertURL.Invoke((Delegate) (() => this.TextConvertURL.Text = changeURL));
+              this.GroupConvertURL.Invoke((Delegate) (() => this.GroupConvertURL.Enabled = true));
+              this.NumericConvertURLMin1.Invoke((Delegate) (() => this.NumericConvertURLMin1.Enabled = true));
+              this.NumericConvertURLMax1.Invoke((Delegate) (() => this.NumericConvertURLMax1.Enabled = true));
+              this.NumericConvertURLMin2.Invoke((Delegate) (() => this.NumericConvertURLMin2.Enabled = true));
+              this.NumericConvertURLMax2.Invoke((Delegate) (() => this.NumericConvertURLMax2.Enabled = true));
+              this.ListConvertURLLanguage.Invoke((Delegate) (() => this.ListConvertURLLanguage.Enabled = true));
+              this.Idle();
+            }
+            using (new StreamReader(AppDomain.CurrentDomain.BaseDirectory + "Temp.json"))
+            {
+              this.sequence = new StringBuilder();
+              string str4 = "";
+              foreach (string readAllLine in System.IO.File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + "Temp.json"))
+              {
+                if (readAllLine != "")
+                {
+                  if (this.bypassY)
+                  {
+                    this.bypassY = false;
+                    if (readAllLine.Contains(","))
+                      this.sequence.Append(readAllLine + "\r\n");
+                    else if (readAllLine.Contains("}"))
+                    {
+                      str4 = str4.Substring(0, str4.Length - 1);
+                      this.sequence.Append("\r\n" + str4 + readAllLine);
+                    }
+                  }
+                  else if (this.bypassX)
+                  {
+                    this.sequence.Append(readAllLine);
+                    if (readAllLine.Contains("]"))
+                    {
+                      this.bypassX = false;
+                      this.bypassY = true;
+                    }
+                  }
+                  else if (readAllLine.Contains("{"))
+                  {
+                    if (this.bypassZ)
+                    {
+                      this.bypassZ = false;
+                      this.sequence.Append("\r\n" + str4 + readAllLine + "\r\n");
+                    }
+                    else
+                      this.sequence.Append(str4 + readAllLine + "\r\n");
+                    str4 += "\t";
+                  }
+                  else if (readAllLine.Contains("}"))
+                  {
+                    str4 = str4.Substring(0, str4.Length - 1);
+                    if (this.bypassZ)
+                    {
+                      this.bypassZ = false;
+                      this.sequence.Append("\r\n" + str4 + readAllLine);
+                    }
+                    else
+                      this.sequence.Append(str4 + readAllLine);
+                  }
+                  else if (readAllLine.Contains("["))
+                  {
+                    if (this.bypassZ)
+                    {
+                      this.bypassZ = false;
+                      this.sequence.Append(readAllLine);
+                    }
+                    else
+                      this.sequence.Append(str4 + readAllLine);
+                    this.bypassX = true;
+                  }
+                  else if (this.bypassZ)
+                  {
+                    if (readAllLine.Contains(":"))
+                    {
+                      this.sequence.Append("\r\n" + str4 + readAllLine);
+                    }
+                    else
+                    {
+                      this.bypassZ = false;
+                      this.sequence.Append("\r\n" + str4 + readAllLine + "\r\n");
+                    }
+                  }
+                  else if (readAllLine.Contains(":"))
+                  {
+                    this.bypassZ = true;
+                    this.sequence.Append(str4 + readAllLine);
+                  }
+                  else
+                    this.sequence.Append(str4 + readAllLine + "\r\n");
+                }
+              }
+            }
+            using (StreamWriter streamWriter = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "Formated.json"))
+              streamWriter.WriteLine((object) this.sequence.Replace("\t,", ",").Replace("\t,", ",").Replace("\t,", ",").Replace("###,", "\r\n\t\t}\r\n\t}\r\n}"));
+            this.GroupJSONConvert.Enabled = true;
+            this.ButtonConvertJSON.BackColor = Color.DarkSeaGreen;
+            this.ButtonConvertJSON.Invoke((Delegate) (() => this.ButtonConvertJSON.Text = "Convert"));
+            System.IO.File.Delete(AppDomain.CurrentDomain.BaseDirectory + "Temp.json");
+            this.Idle();
+            break;
+          }
+          catch (WebException ex)
+          {
+            if (ex.Status == WebExceptionStatus.ProtocolError && ex.Response != null && ((HttpWebResponse) ex.Response).StatusCode == HttpStatusCode.NotFound)
+            {
+              this.GroupStatus.Invoke((Delegate) (() =>
+              {
+                this.GroupStatus.Text = "Nothing found: " + (object) this.firstNumber + "_" + (object) this.secondNumber + "_" + this.country + ".json";
+                this.GroupStatus.Refresh();
+              }));
+              if (this.stopURL)
+              {
+                this.stopURL = false;
+                this.GroupConvertURL.Invoke((Delegate) (() => this.GroupConvertURL.Enabled = true));
+                this.NumericConvertURLMin1.Invoke((Delegate) (() => this.NumericConvertURLMin1.Enabled = true));
+                this.NumericConvertURLMax1.Invoke((Delegate) (() => this.NumericConvertURLMax1.Enabled = true));
+                this.NumericConvertURLMin2.Invoke((Delegate) (() => this.NumericConvertURLMin2.Enabled = true));
+                this.NumericConvertURLMax2.Invoke((Delegate) (() => this.NumericConvertURLMax2.Enabled = true));
+                this.ListConvertURLLanguage.Invoke((Delegate) (() => this.ListConvertURLLanguage.Enabled = true));
+                this.Idle();
+                break;
+              }
+              ++this.secondNumber;
+              if (this.secondNumber == (int) this.NumericConvertURLMax2.Value)
+              {
+                this.secondNumber = (int) this.NumericConvertURLMin2.Value;
+                ++this.firstNumber;
+                if (this.firstNumber == (int) this.NumericConvertURLMax1.Value)
+                {
+                  this.firstNumber = (int) this.NumericConvertURLMin1.Value;
+                  this.secondNumber = (int) this.NumericConvertURLMin2.Value;
+                  if (this.country == "en")
+                  {
+                    this.country = "fr";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for french";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "fr")
+                  {
+                    this.country = "es";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for spanish";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "es")
+                  {
+                    this.country = "de";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for german";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "de")
+                  {
+                    this.country = "it";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for italian";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "it")
+                  {
+                    this.country = "ru";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for russian";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "ru")
+                  {
+                    this.country = "pt";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for portuguese";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "pt")
+                  {
+                    this.country = "cn";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for chinese";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "cn")
+                  {
+                    this.country = "jp";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for japanese";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "jp")
+                  {
+                    this.country = "kr";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for korean";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "kr")
+                  {
+                    this.country = "mx";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for mexican";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "mx")
+                  {
+                    this.country = "pl";
+                    this.GroupStatus.Invoke((Delegate) (() =>
+                    {
+                      this.GroupStatus.Text = "Searching for polish";
+                      this.GroupStatus.Refresh();
+                    }));
+                  }
+                  else if (this.country == "pl")
+                  {
+                    int num = (int) MessageBox.Show("Nothing found!", "Nicko's Job Editor", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    this.GroupConvertURL.Invoke((Delegate) (() => this.GroupConvertURL.Enabled = true));
+                    this.NumericConvertURLMin1.Invoke((Delegate) (() => this.NumericConvertURLMin1.Enabled = true));
+                    this.NumericConvertURLMax1.Invoke((Delegate) (() => this.NumericConvertURLMax1.Enabled = true));
+                    this.NumericConvertURLMin2.Invoke((Delegate) (() => this.NumericConvertURLMin2.Enabled = true));
+                    this.NumericConvertURLMax2.Invoke((Delegate) (() => this.NumericConvertURLMax2.Enabled = true));
+                    this.ListConvertURLLanguage.Invoke((Delegate) (() => this.ListConvertURLLanguage.Enabled = true));
+                    this.GroupJSONConvert.Invoke((Delegate) (() => this.GroupJSONConvert.Enabled = false));
+                    this.ButtonConvertJSON.Invoke((Delegate) (() => this.ButtonConvertJSON.BackColor = Color.LightGray));
+                    this.Idle();
+                    break;
+                  }
+                }
+              }
+            }
+            else
+              throw;
+          }
+          finally
+          {
+            this.TextConvertURLEnable();
+          }
+        }
+      }
+      else
+      {
+        int num = (int) MessageBox.Show("This URL is not valid.\nExample:\nhttps://prod.cloud.rockstargames.com/ugc/gta5mission/8270/A8M6Bz8MLEC5xngvDCzGwA/1_0.jpg", "Nicko's Job Editor", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+        this.GroupConvertURL.Enabled = true;
+        this.NumericConvertURLMin1.Enabled = true;
+        this.NumericConvertURLMax1.Enabled = true;
+        this.NumericConvertURLMin2.Enabled = true;
+        this.NumericConvertURLMax2.Enabled = true;
+        this.ListConvertURLLanguage.Enabled = true;
+        this.Idle();
+      }
+    }

@@ -1,3 +1,5 @@
+import Notify from "./Notify";
+
 export interface Race {
     name: string;
     description: string;
@@ -123,7 +125,7 @@ function getFormattedGrid(t: any, size: number) {
     return grids;
 }
 
-export default function ConvertJson(jsonData: any) {
+function ConvertJson(jsonData: any) {
     let m = jsonData.mission;
     let oa: Race = {} as Race;
 
@@ -151,4 +153,15 @@ export default function ConvertJson(jsonData: any) {
     oa.pickups = getFormattedPickups(m.weap, m.weap.no || 0);
 
     return oa;
+}
+
+export default function ConvertJsonFromUrl(url: string) {
+    Notify('Getted url -> ' + url, 'info')
+    const possibleGtaLink1 = 'https://prod.cloud.rockstargames.com/ugc/gta5mission/';
+    const possibleGtaLink2 = 'http://prod.cloud.rockstargames.com/ugc/gta5mission/';
+    if (url.includes('.json') || url.includes(possibleGtaLink1) || url.includes(possibleGtaLink2)) {
+        Notify('Ok')
+    } else {
+        Notify('No has introducido una URL de Rockstar válida', 'error')
+    }
 }
