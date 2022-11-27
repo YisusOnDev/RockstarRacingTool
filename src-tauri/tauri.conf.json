@@ -11,7 +11,12 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "all": true,
+      "http": {
+        "all": true,
+        "request": true,
+        "scope": ["https://prod.cloud.rockstargames.com/ugc/gta5mission/*"]
+      }
     },
     "bundle": {
       "active": true,
@@ -55,10 +60,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 500,
+        "height": 720,
         "resizable": true,
         "title": "RockstarRacingTool",
-        "width": 700
+        "width": 1280
       }
     ]
   }

@@ -1,9 +1,13 @@
+import { getClient } from '@tauri-apps/api/http';
+import Delay from "./Delay";
 import Notify from "./Notify";
 
 export interface Race {
     name: string;
     description: string;
     creator: string;
+    imageUrl: string;
+    categories: string[];
     delprops: DProp[];
     props: Prop[];
     initialVehicle?: number;
@@ -125,7 +129,7 @@ function getFormattedGrid(t: any, size: number) {
     return grids;
 }
 
-function ConvertJson(jsonData: any) {
+function ConvertJson(jsonData: any, image: string) {
     let m = jsonData.mission;
     let oa: Race = {} as Race;
 
@@ -134,6 +138,7 @@ function ConvertJson(jsonData: any) {
     oa.name = m.gen?.nm;
     oa.description = m.gen?.dec;
     oa.creator = m.gen?.ownerid === '_RSN_' ? 'Rockstar' : jsonData.mission?.gen?.ownerid;
+    oa.imageUrl = image;
 
     oa.delprops = leaveOnlyUnique(m.dhprop?.mn);
     if (m.gen?.propno !== undefined) {
@@ -155,13 +160,78 @@ function ConvertJson(jsonData: any) {
     return oa;
 }
 
-export default function ConvertJsonFromUrl(url: string) {
-    Notify('Getted url -> ' + url, 'info')
-    const possibleGtaLink1 = 'https://prod.cloud.rockstargames.com/ugc/gta5mission/';
-    const possibleGtaLink2 = 'http://prod.cloud.rockstargames.com/ugc/gta5mission/';
-    if (url.includes('.json') || url.includes(possibleGtaLink1) || url.includes(possibleGtaLink2)) {
-        Notify('Ok')
+const possibleGtaLink1 = 'https://prod.cloud.rockstargames.com/ugc/gta5mission/';
+const possibleGtaLink2 = 'http://prod.cloud.rockstargames.com/ugc/gta5mission/';
+const jsonNumbers = [
+    '0_0_',
+    '0_1_',
+    '0_2_',
+    '1_0_',
+    '1_1_',
+    '1_2_',
+    '2_0_',
+    '2_1_',
+    '2_2_'
+]
+const jsonCountries = [
+    'en',
+    'fr',
+    'es',
+    'de',
+    'it',
+    'ru',
+    'pt',
+    'cn',
+    'jp',
+    'kr',
+    'mx',
+    'pl'
+]
+
+async function getJsonFromURL(jsonUrl: string) {
+    const client = await getClient();
+    console.log('Doing request ' + jsonUrl);
+    const response = await client.request({
+        method: 'GET',
+        url: jsonUrl
+    });
+    return response.status === 200 && response.data || JSON.parse('{}')
+}
+
+async function getRaceJson(rockstarId: string) {
+    let checkUrl: string = '';
+    for (let i = 0; i < jsonNumbers.length; i++) {
+        const numbers = jsonNumbers[i]
+        for (let c = 0; c < jsonCountries.length; c++) {
+            const country = jsonCountries[c]
+            const fullJsonPrefix = numbers + country;
+            checkUrl = `https://prod.cloud.rockstargames.com/ugc/gta5mission/7031/${rockstarId}/${fullJsonPrefix}.json`
+            const rockstarJson = await getJsonFromURL(checkUrl);
+            if (rockstarJson.mission !== undefined) {
+                return rockstarJson
+            }
+        }
+    }
+    return 'notfound';
+}
+
+export default async function ConvertJsonFromUrl(url: string, setSpinner: any) {
+    if (url.includes('.json')) {
+        Notify('Ok, we get direct json link, should get the image.');
+    } else if (url.includes(possibleGtaLink1) || url.includes(possibleGtaLink2)) {
+        const paths = new URL(url).pathname;
+        const separatedPaths = paths.split('/');
+        const rid = separatedPaths[separatedPaths.length - 2];
+        setSpinner(true);
+        let rockstarJson = await getRaceJson(rid);
+        setSpinner(false);
+        if (rockstarJson === 'notfound') {
+            Notify('No hemos podido encontrar la URL del JSON', 'error')
+        } else {
+            const convertedJson = ConvertJson(rockstarJson, url)
+            console.log(convertedJson);
+        }
     } else {
-        Notify('No has introducido una URL de Rockstar válida', 'error')
+        Notify('No has introducido una URL de Rockstar válida', 'error');
     }
 }

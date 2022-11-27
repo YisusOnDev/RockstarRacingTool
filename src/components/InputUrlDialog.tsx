@@ -7,20 +7,23 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import ConvertJsonFromUrl from '../utils/ConvertJson';
+import { useSpinner } from '../globals/useSpinner';
 
 interface DialogProps {
-    handler: Function
-}
+    handler: Function,
+    cb: Function
+}   
 
-export const InputUrlDialog: React.FC<DialogProps> = ({ handler }) => {
+export const InputUrlDialog: React.FC<DialogProps> = ({ handler, cb }) => {
     const [insertedUrl, setInsertedUrl] = React.useState('');
+    const setSpinner = useSpinner(state => state.setSpinner);
     const handleClose = () => {
         handler(false);
     };
 
     const handleConfirm = () => {
         handleClose();
-        ConvertJsonFromUrl(insertedUrl);
+        cb(ConvertJsonFromUrl(insertedUrl, setSpinner));
     }
 
     const handleTextChange = (e: any) => {
